@@ -1,30 +1,87 @@
 ---
-title: "airbnb_price_dashboard"
-author: "Aditi Pabal"
-date: "2025-11-09"
-output: html_document
+title: "AirBnB Rental Price Estimation: 80 Rugg Rd, Allston"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    storyboard: false
+runtime: shiny
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+
+library(flexdashboard)
+library(leaflet)
+library(sf)
+library(tidyverse)
+
+# Load the GeoJSON data exported from Python
+price_grid <- st_read("boston_price_grid .geojson")
+my_unit <- st_read("my_unit_location .geojson")
+
+# --- CRITICAL FIX: Reproject to WGS84 (EPSG:4326) for Leaflet ---
+# This will eliminate the 'sf layer is not long-lat data' warnings
+price_grid <- st_transform(price_grid, crs = 4326)
+my_unit <- st_transform(my_unit, crs = 4326)
+# -----------------------------------------------------------------
+
+# Extract the suggested price and ensure it is numeric (as fixed previously)
+suggested_price <- as.numeric(my_unit$radius_1000[1])
+
+# Define a color palette for the price visualization
+pal <- colorNumeric("viridis", domain = price_grid$radius_1000)
 ```
 
-## R Markdown
+```{r}
+# Create the Leaflet map
+leaflet(price_grid) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  
+# Add the Hexagon Grid (Price Surface)
+ addPolygons(
+    fillColor = ~pal(radius_1000),
+    weight = 1,
+    opacity = 1,
+    color = "white",
+    fillOpacity = 0.7,
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#666",
+      fillOpacity = 0.9,
+      bringToFront = TRUE),
+    label = ~paste0("Estimated Price: $", round(radius_1000, 2))
+  ) %>%
+  
+  # Add my unit's location
+  addCircleMarkers(
+    data = my_unit,
+    color = "red",
+    fillColor = "red",
+    radius = 5,
+    stroke = TRUE,
+    fillOpacity = 1,
+    label = paste("My Unit - Suggested Price: $408.58", round(suggested_price, 2))
+  ) %>%
+  
+  # Add Legend
+  addLegend(
+    pal = pal, 
+    values = ~radius_1000, 
+    opacity = 0.7, 
+    title = "Estimated Price ($)",
+    position = "bottomright"
+  ) %>%
+  
+  # Zoom to area of interest
+  setView(
+    lng = st_coordinates(my_unit)[1], 
+    lat = st_coordinates(my_unit)[2], 
+    zoom = 12
+  )
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+        
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
