@@ -2,18 +2,51 @@
 title: "AirBnB Rental Price Estimation: 80 Rugg Rd, Allston"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: rows
+    orientation: columns   # Defines a structure with columns
     vertical_layout: fill
     storyboard: false
 runtime: shiny
 ---
+                               
 
-```{r}
+# INFORMATION{.sidebar}         
+=======================
+
+### 🏠 Unit Information
+
+* **Address:** 80 Rugg Rd, Allston, MA 02134
+* **Characteristics:** Entire Rental Unit, 2 Bedrooms
+* **Method Used:** Inverse Distance Weighting (IDW) within a 1000m radius.
+
+### Suggested Price
+
+> **The final interpolated price is:408.58**
+
+
+---
+
+### **Source Code & Data**
+
+[View the Project on GitHub](https://github.com/aditipabal/AIRBNB-RENTAL)
+
+# (Map)   
+=========================
+
+### Interpolation Map: Suggested Price Surface
+
+```{r setup, include=FALSE}
+# ... PASTE YOUR R SETUP CODE HERE (libraries, data loading, st_transform, etc.)
+# Note: This is where the setup chunk should go if not placed before the entire dashboard.
+# (I recommend placing the setup chunk immediately after the YAML header for clean organization.)
+
+
 
 library(flexdashboard)
 library(leaflet)
 library(sf)
 library(tidyverse)
+
+
 
 # Load the GeoJSON data exported from Python
 price_grid <- st_read("boston_price_grid .geojson")
@@ -80,8 +113,5 @@ leaflet(price_grid) %>%
   )
 
 ```
-
-        
-
 
 
